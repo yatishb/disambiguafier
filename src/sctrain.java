@@ -7,42 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-class surroundingWords {
-	private static String precedingWord;
-	private static String succedingWord;
-	private static int count1;
-	private static int count2;
-	
-	public surroundingWords() {
-		count1 = 0;
-		count2 = 0;
-	}
-	
-	public String getPrecedingWord() {
-		return precedingWord;
-	}
-	public String getSuccedingWord() {
-		return succedingWord;
-	}
-	public int getCount1() {
-		return count1;
-	}
-	public void incrementCount1() {
-		count1++;
-	}
-	public int getCount2() {
-		return count2;
-	}
-	public void incrementCount2() {
-		count2++;
-	}
-	public void setWords(String previous, String next) {
-		precedingWord = previous;
-		succedingWord = next;
-	}
-}
-
-
 public class sctrain {
 	public static final int INITIALIZEZERO = 0;
 	public static final int INVALIDNEGATIVE = -1;
@@ -62,13 +26,13 @@ public class sctrain {
 		return INVALIDNEGATIVE;
 	}
 	
-	public static int searchWord(List<surroundingWords> featureWords, 
+	public static int searchWord(List<String> prevWords, List<String> nextWords,
 			String previous, String next) {
 		int i = INITIALIZEZERO;
-		int limit = featureWords.size();
+		int limit = prevWords.size();
 		while(i<limit){
-			String precedingWord = featureWords.get(i).getPrecedingWord();
-			String succedingWord = featureWords.get(i).getSuccedingWord();
+			String precedingWord = prevWords.get(i);
+			String succedingWord = nextWords.get(i);
 			if(precedingWord.equalsIgnoreCase(previous) && 
 					succedingWord.equalsIgnoreCase(next))
 				return i;
@@ -99,8 +63,11 @@ public class sctrain {
 		String word1 = args[0], word2 = args[1];
 		String trainingFile = args[2], statsOutputFile = args[3];
 		
-		List<surroundingWords> featureList = new ArrayList<surroundingWords>();
-		int noOfDiffPrecedingWords = INITIALIZEZERO ;
+		//List<surroundingWords> featureList = new ArrayList<surroundingWords>();
+		List<String> prevWords = new ArrayList<String>();
+		List<String> nextWords = new ArrayList<String>();
+		List<Integer> count1 = new ArrayList<Integer>();
+		List<Integer> count2 = new ArrayList<Integer>();
 		
 		File fileValidation = new File(trainingFile);
 		if(!fileValidation.exists()) {
@@ -116,33 +83,28 @@ public class sctrain {
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
-				wordBefore= wordsInArray[index-2];
+				wordBefore= wordsInArray[index-2].toLowerCase();
 			}
 			if(index+2 < wordsInArray.length) {
-				wordAfter= wordsInArray[index+2];
+				wordAfter= wordsInArray[index+2].toLowerCase();
 			}
-			int indexIfExists = searchWord(featureList, wordBefore, wordAfter);
+			int indexIfExists = searchWord(prevWords, nextWords, wordBefore, wordAfter);
 			if(indexIfExists == -1) {
-				featureList.add(new surroundingWords());
-				surroundingWords newFeature = featureList.get(noOfDiffPrecedingWords);
-				newFeature.setWords(wordBefore, wordAfter);
+				nextWords.add(wordAfter);
+				prevWords.add(wordBefore);
 				if(wordsInArray[index].equalsIgnoreCase(word1)) {
-					newFeature.incrementCount1();
+					count1.add(1);
+					count2.add(0);
 				} else {
-					newFeature.incrementCount2();
+					count1.add(0);
+					count2.add(1);
 				}
-				featureList.set(noOfDiffPrecedingWords, newFeature);
-				noOfDiffPrecedingWords ++;
-				System.out.print(newFeature.getPrecedingWord()+" "+newFeature.getSuccedingWord()+"\n");
 			} else {
-				System.out.print("Coming here");
-				surroundingWords existingFeature = featureList.get(indexIfExists);
 				if(wordsInArray[index].equalsIgnoreCase(word1)) {
-					existingFeature.incrementCount1();
+					count1.set(indexIfExists, count1.get(indexIfExists)+1);
 				} else {
-					existingFeature.incrementCount2();
+					count2.set(indexIfExists, count2.get(indexIfExists)+1);
 				}
-				featureList.set(indexIfExists, existingFeature);
 			}
 			
 			input = fin.readLine();
@@ -151,18 +113,11 @@ public class sctrain {
 		fin.close();
 		int i= INITIALIZEZERO;		
 		BufferedWriter fout = new BufferedWriter(new FileWriter(statsOutputFile));
-		for(; i<noOfDiffPrecedingWords; i++) {
-			//System.out.print(i);
-			surroundingWords feature = featureList.get(i);
-			String toPrint = feature.getPrecedingWord()+"\t"+feature.getSuccedingWord()+"\t"+feature.getCount1()+"\t"+feature.getCount2()+"\n";
+		for(; i<prevWords.size(); i++) {
+			String toPrint = prevWords.get(i)+" "+nextWords.get(i);
+			toPrint += " "+word1+" "+count1.get(i)+" "+word2+" "+count2.get(i)+"\n";
 			
-			/*if(feature.getCount1() > feature.getCount2()) {
-				toPrint += "\t"+word1+"\n";
-			} else {
-				toPrint += "\t"+word2+"\n";
-			}*/
 			fout.write(toPrint);
-			//System.out.print(toPrint);
 		}
 		fout.close();
 	  }

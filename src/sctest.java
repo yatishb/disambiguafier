@@ -26,11 +26,15 @@ public class sctest {
 		return INVALIDNEGATIVE;
 	}
 	
-	public static int searchWord(List<String> precedingWords, String check) {
+	public static int searchWord(List<String> prevWords, List<String> nextWords,
+			String previous, String next) {
 		int i = INITIALIZEZERO;
-		int limit = precedingWords.size();
+		int limit = prevWords.size();
 		while(i<limit){
-			if(precedingWords.get(i).equalsIgnoreCase(check))
+			String precedingWord = prevWords.get(i);
+			String succedingWord = nextWords.get(i);
+			if(precedingWord.equalsIgnoreCase(previous) && 
+					succedingWord.equalsIgnoreCase(next))
 				return i;
 			i++;
 		}
@@ -41,9 +45,13 @@ public class sctest {
 		String word1 = args[0], word2 = args[1];
 		String testFile = args[2], statsFile = args[3], answerFile = args[4];
 		
-		List<String> precedingWords = new ArrayList<String>();
-		List<Integer> correctWord = new ArrayList<Integer>();
-		int noOfDiffPrecedingWords = INITIALIZEZERO ;
+		List<String> prevWords = new ArrayList<String>();
+		List<String> nextWords = new ArrayList<String>();
+		List<String> correctWord = new ArrayList<String>();
+		
+		List<String> bigramPrecedingWord = new ArrayList<String>();
+		List<Integer> bigramWord1 = new ArrayList<Integer>();
+		List<Integer> bigramWord2 = new ArrayList<Integer>();
 		
 		File fileValidation = new File(statsFile); 
 		if(!fileValidation.exists()) {
@@ -54,13 +62,25 @@ public class sctest {
 		String input = fin.readLine();
 		while(input != null) {
 			String[] stat = input.split(" ");
-			precedingWords.add(stat[0]);
-			if(stat[1].equalsIgnoreCase(word1)) {
-				correctWord.add(1);
+			stat[0] = stat[0].toLowerCase();
+			stat[1] = stat[1].toLowerCase();
+			prevWords.add(stat[0]);
+			nextWords.add(stat[1]);
+			if(Integer.valueOf(stat[3]) > Integer.valueOf(stat[5])){
+				correctWord.add(stat[2]);
 			} else {
-				correctWord.add(2);
+				correctWord.add(stat[4]);
 			}
-			noOfDiffPrecedingWords++;
+			
+			if(bigramPrecedingWord.contains(stat[0]) == false) {
+				bigramPrecedingWord.add(stat[0]);
+				bigramWord1.add(Integer.valueOf(stat[3]));
+				bigramWord2.add(Integer.valueOf(stat[5]));
+			} else {
+				int index = bigramPrecedingWord.indexOf(stat[0]);
+				bigramWord1.set(index, bigramWord1.get(index)+Integer.valueOf(stat[3]));
+				bigramWord2.set(index, bigramWord2.get(index)+Integer.valueOf(stat[5]));
+			}
 			input = fin.readLine();
 		}
 		fin.close();
@@ -76,20 +96,30 @@ public class sctest {
 		while(input != null) {
 			String[] id = input.split("\t");
 			String[] wordsInArray = id[1].split(" ");
+			String wordBefore = null, wordAfter = null;
 			
 			int index = searchWord(wordsInArray, ">>");
+			if(index-2 >= 0) {
+				wordBefore= wordsInArray[index-2].toLowerCase();
+			}
+			if(index+2 < wordsInArray.length) {
+				wordAfter= wordsInArray[index+1].toLowerCase();
+			}
 			
-			String wordBefore = wordsInArray[index-2];
-			int indexOfPreceding = searchWord(precedingWords, wordBefore);
+			int indexOfPreceding = searchWord(prevWords, nextWords, wordBefore, wordAfter);
 			if(indexOfPreceding == -1) {
-				fout.write(id[0] + "\n");
-			} else {
-				int wordToBeUsed = correctWord.get(indexOfPreceding);
-				if (wordToBeUsed == 1) {
-					fout.write(id[0] + " " + word1 + "\n");
+				if(bigramPrecedingWord.contains(wordBefore) == true){
+					indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
+					if(bigramWord1.get(indexOfPreceding) > bigramWord2.get(indexOfPreceding)){
+						fout.write(id[0] + " " + word1 + "\n");
+					} else {
+						fout.write(id[0] + " " + word2 + "\n");
+					}
 				} else {
-					fout.write(id[0] + " " + word2 + "\n");
+					fout.write(id[0] + "\n");
 				}
+			} else {
+				fout.write(id[0] + " " + correctWord.get(indexOfPreceding) + "\n");
 			}
 			
 			input = fin.readLine();

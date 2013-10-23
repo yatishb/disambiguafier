@@ -61,6 +61,7 @@ public class sctest {
 	
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
+		int countWord1 = 0, countWord2 = 0;
 		String testFile = args[2], statsFile = args[3], answerFile = args[4];
 		
 		List<String> prevWords = new ArrayList<String>();
@@ -78,27 +79,41 @@ public class sctest {
 		}
 		BufferedReader fin = new BufferedReader(new FileReader(statsFile));
 		String input = fin.readLine();
+		int counter = 0;
 		while(input != null) {
 			String[] stat = input.split(" ");
-			stat[0] = stat[0].toLowerCase();
-			stat[1] = stat[1].toLowerCase();
-			prevWords.add(stat[0]);
-			nextWords.add(stat[1]);
-			if(Integer.valueOf(stat[3]) > Integer.valueOf(stat[5])){
-				correctWord.add(stat[2]);
+			if(counter<2){
+				if(word1.equalsIgnoreCase(stat[0])) {
+					countWord1 = Integer.parseInt(stat[1]);
+				} else {
+					countWord2 = Integer.parseInt(stat[1]);
+				}
 			} else {
-				correctWord.add(stat[4]);
+				stat[0] = stat[0].toLowerCase();
+				stat[1] = stat[1].toLowerCase();
+				prevWords.add(stat[0]);
+				nextWords.add(stat[1]);
+				if(Integer.valueOf(stat[3]) > Integer.valueOf(stat[5])){
+					correctWord.add(stat[2]);
+				} else if(Integer.valueOf(stat[3]) < Integer.valueOf(stat[5])) {
+					correctWord.add(stat[4]);
+				} else if(countWord1 > countWord2) {
+					correctWord.add(stat[2]);
+				} else {
+					correctWord.add(stat[4]);
+				}
+
+				if(bigramPrecedingWord.contains(stat[0]) == false) {
+					bigramPrecedingWord.add(stat[0]);
+					bigramWord1.add(Integer.valueOf(stat[3]));
+					bigramWord2.add(Integer.valueOf(stat[5]));
+				} else {
+					int index = bigramPrecedingWord.indexOf(stat[0]);
+					bigramWord1.set(index, bigramWord1.get(index)+Integer.valueOf(stat[3]));
+					bigramWord2.set(index, bigramWord2.get(index)+Integer.valueOf(stat[5]));
+				}
 			}
-			
-			if(bigramPrecedingWord.contains(stat[0]) == false) {
-				bigramPrecedingWord.add(stat[0]);
-				bigramWord1.add(Integer.valueOf(stat[3]));
-				bigramWord2.add(Integer.valueOf(stat[5]));
-			} else {
-				int index = bigramPrecedingWord.indexOf(stat[0]);
-				bigramWord1.set(index, bigramWord1.get(index)+Integer.valueOf(stat[3]));
-				bigramWord2.set(index, bigramWord2.get(index)+Integer.valueOf(stat[5]));
-			}
+			counter++;
 			input = fin.readLine();
 		}
 		fin.close();

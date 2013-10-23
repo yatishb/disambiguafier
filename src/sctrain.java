@@ -62,6 +62,7 @@ public class sctrain {
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
 		String trainingFile = args[2], statsOutputFile = args[3];
+		int countWord1 = 0, countWord2 = 0;
 		
 		//List<surroundingWords> featureList = new ArrayList<surroundingWords>();
 		List<String> prevWords = new ArrayList<String>();
@@ -97,15 +98,19 @@ public class sctrain {
 				if(wordsInArray[index].equalsIgnoreCase(word1)) {
 					count1.add(1);
 					count2.add(0);
+					countWord1++;
 				} else {
 					count1.add(0);
 					count2.add(1);
+					countWord2++;
 				}
 			} else {
 				if(wordsInArray[index].equalsIgnoreCase(word1)) {
 					count1.set(indexIfExists, count1.get(indexIfExists)+1);
+					countWord1++;
 				} else {
 					count2.set(indexIfExists, count2.get(indexIfExists)+1);
+					countWord2++;
 				}
 			}
 			
@@ -115,8 +120,12 @@ public class sctrain {
 		fin.close();
 		int i= INITIALIZEZERO;		
 		BufferedWriter fout = new BufferedWriter(new FileWriter(statsOutputFile));
+		String toPrint = word1+" "+countWord1+"\n";
+		fout.write(toPrint);
+		toPrint = word2+" "+countWord2+"\n";
+		fout.write(toPrint);
 		for(; i<prevWords.size(); i++) {
-			String toPrint = prevWords.get(i)+" "+nextWords.get(i);
+			toPrint = prevWords.get(i)+" "+nextWords.get(i);
 			toPrint += " "+word1+" "+count1.get(i)+" "+word2+" "+count2.get(i)+"\n";
 			
 			fout.write(toPrint);

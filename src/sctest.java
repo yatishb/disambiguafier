@@ -13,6 +13,7 @@ public class sctest {
 	public static final CharSequence PUNCTUATION_STOP = ".";
 	public static final CharSequence PUNCTUATION_COMMA = ",";
 	public static final CharSequence PUNCTUATION_APOS = "\'";
+	public static final CharSequence PUNCTUATION_DQUOTES = "\"";
 	
 	
 	public static int searchWord(String[] words, String check) {
@@ -47,7 +48,8 @@ public class sctest {
 		while (i<limit) {
 			if(words[i].contains(PUNCTUATION_APOS) || 
 					words[i].contains(PUNCTUATION_COMMA) ||
-					words[i].contains(PUNCTUATION_STOP)) {
+					words[i].contains(PUNCTUATION_STOP) ||
+					words[i].contains(PUNCTUATION_DQUOTES)) {
 				int j=i;
 				for(j=i; j<limit-1; j++) {
 					words[j] = words[j+1]; 
@@ -56,6 +58,37 @@ public class sctest {
 				limit--;
 			}
 			i++;
+		}
+	}
+	
+	public static void readStopWrds(List<String> stopWords) 
+			throws IOException {
+		BufferedReader fin = new BufferedReader(new FileReader("stopwd.txt"));
+		String input = fin.readLine();
+		while(input!=null){
+			stopWords.add(input);
+			input = fin.readLine();
+		}
+		fin.close();
+	}
+	
+	public static void removeStopWords(List<String> stopWords, 
+			String[] words) {
+		int i = INITIALIZEZERO, j = INITIALIZEZERO;
+		for(; i<stopWords.size(); i++) {
+			j = INITIALIZEZERO;
+			int limit = words.length;
+			while (j<limit) {
+				if(words[j].equalsIgnoreCase(stopWords.get(i))) {
+					int k=j;
+					for(k=j; k<limit-1; k++) {
+						words[k] = words[k+1]; 
+					}
+					j--;
+					limit--;
+				}
+				j++;
+			}
 		}
 	}
 	
@@ -123,6 +156,11 @@ public class sctest {
 			System.out.print("No file found");
 			return;
 		}
+		
+		//read Stop word file and update stop word list
+		List<String> stopWords = new ArrayList<String>();
+		readStopWrds(stopWords);
+				
 		fin = new BufferedReader(new FileReader(testFile));
 		BufferedWriter fout = new BufferedWriter(new FileWriter(answerFile));
 		input = fin.readLine();
@@ -131,6 +169,7 @@ public class sctest {
 			String[] wordsInArray = id[1].split(" ");
 			String wordBefore = null, wordAfter = null;
 			removePunctuation(wordsInArray);
+			removeStopWords(stopWords, wordsInArray);
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {

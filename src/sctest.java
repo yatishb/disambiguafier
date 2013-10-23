@@ -41,6 +41,24 @@ public class sctest {
 		return INVALIDNEGATIVE;
 	}
 	
+	public static void removePunctuation(String[] words) {
+		int i = INITIALIZEZERO;
+		int limit = words.length;
+		while (i<limit) {
+			if(words[i].contains(PUNCTUATION_APOS) || 
+					words[i].contains(PUNCTUATION_COMMA) ||
+					words[i].contains(PUNCTUATION_STOP)) {
+				int j=i;
+				for(j=i; j<limit-1; j++) {
+					words[j] = words[j+1]; 
+				}
+				i--;
+				limit--;
+			}
+			i++;
+		}
+	}
+	
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
 		String testFile = args[2], statsFile = args[3], answerFile = args[4];
@@ -97,6 +115,7 @@ public class sctest {
 			String[] id = input.split("\t");
 			String[] wordsInArray = id[1].split(" ");
 			String wordBefore = null, wordAfter = null;
+			removePunctuation(wordsInArray);
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
@@ -106,18 +125,20 @@ public class sctest {
 				wordAfter= wordsInArray[index+1].toLowerCase();
 			}
 			
-			int indexOfPreceding = searchWord(prevWords, nextWords, wordBefore, wordAfter);
+			int indexOfPreceding = searchWord(prevWords, nextWords, 
+					wordBefore, wordAfter);
 			if(indexOfPreceding == -1) {
-				if(bigramPrecedingWord.contains(wordBefore) == true){
+				/*if(bigramPrecedingWord.contains(wordBefore) == true){
 					indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
-					if(bigramWord1.get(indexOfPreceding) > bigramWord2.get(indexOfPreceding)){
+					if(bigramWord1.get(indexOfPreceding) > 
+					bigramWord2.get(indexOfPreceding)){
 						fout.write(id[0] + " " + word1 + "\n");
 					} else {
 						fout.write(id[0] + " " + word2 + "\n");
 					}
 				} else {
 					fout.write(id[0] + "\n");
-				}
+				}*/
 			} else {
 				fout.write(id[0] + " " + correctWord.get(indexOfPreceding) + "\n");
 			}

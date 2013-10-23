@@ -81,6 +81,8 @@ public class sctrain {
 			String[] wordsInArray = id[1].split(" ");
 			String wordBefore = "", wordAfter = "";
 			
+			removePunctuation(wordsInArray);
+			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
 				wordBefore= wordsInArray[index-2].toLowerCase();

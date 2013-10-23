@@ -59,6 +59,16 @@ public class sctrain {
 		}
 	}
 	
+	public static void readStopWrds(List<String> stopWords) throws IOException {
+		BufferedReader fin = new BufferedReader(new FileReader("stopwd.txt"));
+		String input = fin.readLine();
+		while(input!=null){
+			stopWords.add(input);
+			input = fin.readLine();
+		}
+		fin.close();
+	}
+	
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
 		String trainingFile = args[2], statsOutputFile = args[3];
@@ -69,6 +79,10 @@ public class sctrain {
 		List<String> nextWords = new ArrayList<String>();
 		List<Integer> count1 = new ArrayList<Integer>();
 		List<Integer> count2 = new ArrayList<Integer>();
+		
+		//read Stop word file and update stop word list
+		List<String> stopWords = new ArrayList<String>();
+		readStopWrds(stopWords);
 		
 		File fileValidation = new File(trainingFile);
 		if(!fileValidation.exists()) {

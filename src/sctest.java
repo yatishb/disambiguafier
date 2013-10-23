@@ -140,23 +140,10 @@ public class sctest {
 				wordAfter= wordsInArray[index+1].toLowerCase();
 			}
 			
-			int indexOfPreceding = searchWord(prevWords, nextWords, 
-					wordBefore, wordAfter);
-			if(indexOfPreceding == -1) {
-				/*if(bigramPrecedingWord.contains(wordBefore) == true){
-					indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
-					if(bigramWord1.get(indexOfPreceding) > 
-					bigramWord2.get(indexOfPreceding)){
-						fout.write(id[0] + " " + word1 + "\n");
-					} else {
-						fout.write(id[0] + " " + word2 + "\n");
-					}
-				} else {
-					fout.write(id[0] + "\n");
-				}*/
-			} else {
-				fout.write(id[0] + " " + correctWord.get(indexOfPreceding) + "\n");
-			}
+			String word = getCorrectWord(word1, word2, prevWords, 
+					nextWords, correctWord,	bigramPrecedingWord, 
+					bigramWord1, bigramWord2, wordBefore, wordAfter);
+			fout.write(id[0] + " " + word + "\n");
 			
 			input = fin.readLine();
 		}
@@ -164,4 +151,29 @@ public class sctest {
 		fin.close();
 		fout.close();
 	  }
+
+	private static String getCorrectWord(String word1, String word2,
+			List<String> prevWords, List<String> nextWords,
+			List<String> correctWord, List<String> bigramPrecedingWord,
+			List<Integer> bigramWord1, List<Integer> bigramWord2,
+			String wordBefore, String wordAfter) throws IOException {
+		
+		int indexOfPreceding = searchWord(prevWords, nextWords, 
+				wordBefore, wordAfter);
+		if(indexOfPreceding == -1) {
+			if(bigramPrecedingWord.contains(wordBefore) == true){
+				indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
+				if(bigramWord1.get(indexOfPreceding) > 
+				bigramWord2.get(indexOfPreceding)){
+					return word1;
+				} else {
+					return word2;
+				}
+			} else {
+				return "";
+			}
+		} else {
+			return(correctWord.get(indexOfPreceding));
+		}
+	}
 }

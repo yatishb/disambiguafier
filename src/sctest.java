@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 public class sctest {
 	public static final int INITIALIZEZERO = 0;
@@ -17,6 +16,7 @@ public class sctest {
 	public static final CharSequence PUNCTUATION_DQUOTES = "\"";
 	public static final CharSequence PUNCTUATION_COLON = ":";
 	public static final CharSequence PUNCTUATION_SEMICOLON = ";";
+	public static final int DIST_SURROUNDING = 5;
 	
 	
 	public static int searchWord(String[] words, String check) {
@@ -189,7 +189,7 @@ public class sctest {
 			String[] id = input.split("\t");
 			String[] wordsInArray = id[1].split(" ");
 			String wordBefore = null, wordAfter = null;
-			removePunctuation(wordsInArray);
+			//removePunctuation(wordsInArray);
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
@@ -201,31 +201,34 @@ public class sctest {
 			
 			String word = getCorrectWord(word1, word2, prevWords, 
 					nextWords, correctWord, wordBefore, wordAfter);
-			removeStopWords(stopWords, wordsInArray);
+			//removeStopWords(stopWords, wordsInArray);
 			
 			if(word.equals("")){
 				int newIndex = searchWord(wordsInArray, ">>")-2;//should give me the word before w
 				int i=0;
 				double prob1 = countWord1/(countWord1+countWord2);
 				double prob2 = countWord2/(countWord1+countWord2);
-				while(newIndex-i>=0) {
+				while(newIndex-i>=0 && newIndex-i>=newIndex-DIST_SURROUNDING) {
 					int exists = surroundingWord.indexOf(wordsInArray[newIndex-i].toLowerCase());
 					if(exists != -1 && surroundingCount1.get(exists)!=0 
 							&& surroundingCount2.get(exists)!=0) {
-						prob1 *= (surroundingCount1.get(exists)/countWord1);
-						prob2 *= surroundingCount2.get(exists)/countWord2;
+						prob1 *= (surroundingCount1.get(exists)/numSurrounding1);
+						prob2 *= surroundingCount2.get(exists)/numSurrounding2;
+						System.out.println(surroundingWord.get(exists));
 					}
 					i++;
 				}
+				i=0;
 				newIndex = searchWord(wordsInArray, ">>")+1;//should give me the word before w
-				while(newIndex<wordsInArray.length) {
-					int exists = surroundingWord.indexOf(wordsInArray[newIndex].toLowerCase());
+				while(newIndex+i<wordsInArray.length && newIndex+i<newIndex+DIST_SURROUNDING) {
+					int exists = surroundingWord.indexOf(wordsInArray[newIndex+i].toLowerCase());
 					if(exists != -1 && surroundingCount1.get(exists)!=0 
 							&& surroundingCount2.get(exists)!=0) {
-						prob1 *= (surroundingCount1.get(exists)/countWord1);
-						prob2 *= surroundingCount2.get(exists)/countWord2;
+						prob1 *= (surroundingCount1.get(exists)/numSurrounding1);
+						prob2 *= surroundingCount2.get(exists)/numSurrounding2;
+						System.out.println(surroundingWord.get(exists));
 					}
-					newIndex++;
+					i++;
 				}
 				
 				if(prob1>prob2){
@@ -237,6 +240,7 @@ public class sctest {
 							bigramPrecedingWord, bigramWord1, bigramWord2,
 							wordBefore);
 				}
+				System.out.println(id[0]+ " "+prob1+" "+prob2);
 			}
 			fout.write(id[0] + " " + word + "\n");
 			
@@ -261,6 +265,11 @@ public class sctest {
 				return word2;
 			}
 		} else {
+			/*int num = (int) (Math.random()*2);
+			if(num == 0)
+				return word1;
+			else
+				return word2;*/
 			return "";
 		}
 	}

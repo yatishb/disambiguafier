@@ -19,6 +19,7 @@ public class sctrain {
 	public static final CharSequence PUNCTUATION_COLON = ":";
 	public static final CharSequence PUNCTUATION_SEMICOLON = ";";
 	public static final CharSequence PUNCTUATION_UNK = "`";
+	public static final int DIST_SURROUNDING = 5;
 	
 	
 	public static int searchWord(String[] words, String check) {
@@ -51,14 +52,14 @@ public class sctrain {
 		int i = INITIALIZEZERO;
 		int limit = words.size();
 		while (i<limit) {
-			if(words.get(i).contains(PUNCTUATION_APOS) || 
-					words.get(i).contains(PUNCTUATION_COMMA) ||
-					words.get(i).contains(PUNCTUATION_STOP) ||
-					words.get(i).contains(PUNCTUATION_SLASH) ||
-					words.get(i).contains(PUNCTUATION_COLON) ||
-					words.get(i).contains(PUNCTUATION_SEMICOLON) ||
-					words.get(i).contains(PUNCTUATION_DPOS) ||
-					words.get(i).contains(PUNCTUATION_UNK)) {
+			if(words.get(i).equals(PUNCTUATION_APOS) || 
+					words.get(i).equals(PUNCTUATION_COMMA) ||
+					words.get(i).equals(PUNCTUATION_STOP) ||
+					words.get(i).equals(PUNCTUATION_SLASH) ||
+					words.get(i).equals(PUNCTUATION_COLON) ||
+					words.get(i).equals(PUNCTUATION_SEMICOLON) ||
+					words.get(i).equals(PUNCTUATION_DPOS) ||
+					words.get(i).equals(PUNCTUATION_UNK)) {
 				words.remove(i);
 				i--;
 				limit--;
@@ -208,7 +209,7 @@ public class sctrain {
 			Vector<String> words, int num) {
 		int newIndex = words.indexOf(">>")-1;//should give me the word before w
 		int i=0;
-		while(newIndex-i>=0) {
+		while(newIndex-i>=0 && newIndex-i>=newIndex-DIST_SURROUNDING) {
 			int exists = surroundingWord.indexOf(words.get(newIndex-i).toLowerCase());
 			if(exists == -1) {
 				surroundingWord.add(words.get(newIndex-i).toLowerCase());
@@ -229,10 +230,11 @@ public class sctrain {
 			i++;
 		}
 		newIndex = words.indexOf(">>")+1;//should give me the word before w
-		while(newIndex<words.size()) {
-			int exists = surroundingWord.indexOf(words.get(newIndex).toLowerCase());
+		i=0;
+		while(newIndex+i<words.size() && newIndex+i<newIndex+DIST_SURROUNDING) {
+			int exists = surroundingWord.indexOf(words.get(newIndex+i).toLowerCase());
 			if(exists == -1) {
-				surroundingWord.add(words.get(newIndex).toLowerCase());
+				surroundingWord.add(words.get(newIndex+i).toLowerCase());
 				if(num == 1){
 					surroundingCount1.add(1);
 					surroundingCount2.add(0);
@@ -247,7 +249,7 @@ public class sctrain {
 					surroundingCount2.set(exists, surroundingCount2.get(exists)+1);
 				}
 			}
-			newIndex++;
+			i++;
 		}
 	}
 }

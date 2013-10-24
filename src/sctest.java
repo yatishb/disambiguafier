@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class sctest {
 	public static final int INITIALIZEZERO = 0;
@@ -98,7 +99,7 @@ public class sctest {
 	
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
-		int countWord1 = 0, countWord2 = 0, numCollocation = 0, numSurrounding = 0;
+		double countWord1 = 0, countWord2 = 0, numCollocation = 0, numSurrounding = 0;
 		String testFile = args[2], statsFile = args[3], answerFile = args[4];
 		
 		List<String> prevWords = new ArrayList<String>();
@@ -112,7 +113,7 @@ public class sctest {
 		List<String> surroundingWord = new ArrayList<String>();
 		List<Integer> surroundingCount1 = new ArrayList<Integer>();
 		List<Integer> surroundingCount2 = new ArrayList<Integer>();
-		int numSurrounding1 = 0, numSurrounding2 = 0;
+		double numSurrounding1 = 0, numSurrounding2 = 0;
 		
 		File fileValidation = new File(statsFile); 
 		if(!fileValidation.exists()) {
@@ -132,7 +133,6 @@ public class sctest {
 				}
 			} else if(counter == 2) {
 				numCollocation = Integer.parseInt(stat[0]);
-				System.out.print(numCollocation);
 			} else if(counter <= 2+numCollocation) {
 				stat[0] = stat[0].toLowerCase();
 				stat[1] = stat[1].toLowerCase();
@@ -206,37 +206,24 @@ public class sctest {
 			if(word.equals("")){
 				int newIndex = searchWord(wordsInArray, ">>")-2;//should give me the word before w
 				int i=0;
-				float prob1 = 0, prob2 = 0;
+				double prob1 = countWord1/(countWord1+countWord2);
+				double prob2 = countWord2/(countWord1+countWord2);
 				while(newIndex-i>=0) {
 					int exists = surroundingWord.indexOf(wordsInArray[newIndex-i].toLowerCase());
-					if(exists != -1) {
-						if(prob1 == 0){
-							//System.out.println(surroundingCount1.get(exists)/numSurrounding1);
-							prob1 = surroundingCount1.get(exists);///numSurrounding1;
-							prob2 = surroundingCount2.get(exists);///numSurrounding2;
-						} else {
-							prob1 += surroundingCount1.get(exists)/numSurrounding1;
-							prob2 += surroundingCount2.get(exists)/numSurrounding2;
-							/*prob1 *= surroundingCount1.get(exists)/numSurrounding1;
-							prob2 *= surroundingCount2.get(exists)/numSurrounding2;*/
-						}
+					if(exists != -1 && surroundingCount1.get(exists)!=0 
+							&& surroundingCount2.get(exists)!=0) {
+						prob1 *= (surroundingCount1.get(exists)/countWord1);
+						prob2 *= surroundingCount2.get(exists)/countWord2;
 					}
 					i++;
 				}
 				newIndex = searchWord(wordsInArray, ">>")+1;//should give me the word before w
 				while(newIndex<wordsInArray.length) {
 					int exists = surroundingWord.indexOf(wordsInArray[newIndex].toLowerCase());
-					if(exists != -1) {
-						if(prob1 == 0){
-							//System.out.println(surroundingCount1.get(exists)/numSurrounding1);
-							prob1 = surroundingCount1.get(exists);///numSurrounding1;
-							prob2 = surroundingCount2.get(exists);///numSurrounding2;
-						} else {
-							prob1 += surroundingCount1.get(exists)/numSurrounding1;
-							prob2 += surroundingCount2.get(exists)/numSurrounding2;
-							/*prob1 *= surroundingCount1.get(exists)/numSurrounding1;
-							prob2 *= surroundingCount2.get(exists)/numSurrounding2;*/
-						}
+					if(exists != -1 && surroundingCount1.get(exists)!=0 
+							&& surroundingCount2.get(exists)!=0) {
+						prob1 *= (surroundingCount1.get(exists)/countWord1);
+						prob2 *= surroundingCount2.get(exists)/countWord2;
 					}
 					newIndex++;
 				}
@@ -253,12 +240,12 @@ public class sctest {
 			}
 			fout.write(id[0] + " " + word + "\n");
 			
+			
 			input = fin.readLine();
 		}
 		
 		fin.close();
 		fout.close();
-		System.out.print(numSurrounding1);
 	  }
 
 	private static String extractUsingBigram(String word1, String word2,

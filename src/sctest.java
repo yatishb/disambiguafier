@@ -14,6 +14,8 @@ public class sctest {
 	public static final CharSequence PUNCTUATION_COMMA = ",";
 	public static final CharSequence PUNCTUATION_APOS = "\'";
 	public static final CharSequence PUNCTUATION_DQUOTES = "\"";
+	public static final CharSequence PUNCTUATION_COLON = ":";
+	public static final CharSequence PUNCTUATION_SEMICOLON = ";";
 	
 	
 	public static int searchWord(String[] words, String check) {
@@ -49,7 +51,9 @@ public class sctest {
 			if(words[i].contains(PUNCTUATION_APOS) || 
 					words[i].contains(PUNCTUATION_COMMA) ||
 					words[i].contains(PUNCTUATION_STOP) ||
-					words[i].contains(PUNCTUATION_DQUOTES)) {
+					words[i].contains(PUNCTUATION_DQUOTES) ||
+					words[i].contains(PUNCTUATION_COLON) ||
+					words[i].contains(PUNCTUATION_SEMICOLON)) {
 				int j=i;
 				for(j=i; j<limit-1; j++) {
 					words[j] = words[j+1]; 
@@ -94,7 +98,7 @@ public class sctest {
 	
 	public static void main(String[] args) throws IOException {
 		String word1 = args[0], word2 = args[1];
-		int countWord1 = 0, countWord2 = 0;
+		int countWord1 = 0, countWord2 = 0, numCollocation = 0, numSurrounding = 0;
 		String testFile = args[2], statsFile = args[3], answerFile = args[4];
 		
 		List<String> prevWords = new ArrayList<String>();
@@ -104,6 +108,11 @@ public class sctest {
 		List<String> bigramPrecedingWord = new ArrayList<String>();
 		List<Integer> bigramWord1 = new ArrayList<Integer>();
 		List<Integer> bigramWord2 = new ArrayList<Integer>();
+		
+		List<String> surroundingWord = new ArrayList<String>();
+		List<Integer> surroundingCount1 = new ArrayList<Integer>();
+		List<Integer> surroundingCount2 = new ArrayList<Integer>();
+		int numSurrounding1 = 0, numSurrounding2 = 0;
 		
 		File fileValidation = new File(statsFile); 
 		if(!fileValidation.exists()) {
@@ -121,7 +130,10 @@ public class sctest {
 				} else {
 					countWord2 = Integer.parseInt(stat[1]);
 				}
-			} else {
+			} else if(counter == 2) {
+				numCollocation = Integer.parseInt(stat[0]);
+				System.out.print(numCollocation);
+			} else if(counter <= 2+numCollocation) {
 				stat[0] = stat[0].toLowerCase();
 				stat[1] = stat[1].toLowerCase();
 				prevWords.add(stat[0]);
@@ -145,6 +157,15 @@ public class sctest {
 					bigramWord1.set(index, bigramWord1.get(index)+Integer.valueOf(stat[3]));
 					bigramWord2.set(index, bigramWord2.get(index)+Integer.valueOf(stat[5]));
 				}
+			} else if(counter == 3+numCollocation){
+				numSurrounding = Integer.parseInt(stat[0]);
+			} else if(counter <= 3+numSurrounding+numCollocation){
+				stat[0] = stat[0].toLowerCase();
+				surroundingWord.add(stat[0]);
+				surroundingCount1.add(Integer.parseInt(stat[2]));
+				surroundingCount2.add(Integer.parseInt(stat[4]));
+				numSurrounding1 += Integer.parseInt(stat[2]);
+				numSurrounding2 += Integer.parseInt(stat[4]);
 			}
 			counter++;
 			input = fin.readLine();
@@ -169,7 +190,6 @@ public class sctest {
 			String[] wordsInArray = id[1].split(" ");
 			String wordBefore = null, wordAfter = null;
 			removePunctuation(wordsInArray);
-			removeStopWords(stopWords, wordsInArray);
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
@@ -180,8 +200,57 @@ public class sctest {
 			}
 			
 			String word = getCorrectWord(word1, word2, prevWords, 
-					nextWords, correctWord,	bigramPrecedingWord, 
-					bigramWord1, bigramWord2, wordBefore, wordAfter);
+					nextWords, correctWord, wordBefore, wordAfter);
+			removeStopWords(stopWords, wordsInArray);
+			
+			if(word.equals("")){
+				int newIndex = searchWord(wordsInArray, ">>")-2;//should give me the word before w
+				int i=0;
+				float prob1 = 0, prob2 = 0;
+				while(newIndex-i>=0) {
+					int exists = surroundingWord.indexOf(wordsInArray[newIndex-i].toLowerCase());
+					if(exists != -1) {
+						if(prob1 == 0){
+							//System.out.println(surroundingCount1.get(exists)/numSurrounding1);
+							prob1 = surroundingCount1.get(exists);///numSurrounding1;
+							prob2 = surroundingCount2.get(exists);///numSurrounding2;
+						} else {
+							prob1 += surroundingCount1.get(exists)/numSurrounding1;
+							prob2 += surroundingCount2.get(exists)/numSurrounding2;
+							/*prob1 *= surroundingCount1.get(exists)/numSurrounding1;
+							prob2 *= surroundingCount2.get(exists)/numSurrounding2;*/
+						}
+					}
+					i++;
+				}
+				newIndex = searchWord(wordsInArray, ">>")+1;//should give me the word before w
+				while(newIndex<wordsInArray.length) {
+					int exists = surroundingWord.indexOf(wordsInArray[newIndex].toLowerCase());
+					if(exists != -1) {
+						if(prob1 == 0){
+							//System.out.println(surroundingCount1.get(exists)/numSurrounding1);
+							prob1 = surroundingCount1.get(exists);///numSurrounding1;
+							prob2 = surroundingCount2.get(exists);///numSurrounding2;
+						} else {
+							prob1 += surroundingCount1.get(exists)/numSurrounding1;
+							prob2 += surroundingCount2.get(exists)/numSurrounding2;
+							/*prob1 *= surroundingCount1.get(exists)/numSurrounding1;
+							prob2 *= surroundingCount2.get(exists)/numSurrounding2;*/
+						}
+					}
+					newIndex++;
+				}
+				
+				if(prob1>prob2){
+					word = word1;
+				} else if(prob2>prob1) {
+					word = word2;
+				} else {
+					word = extractUsingBigram(word1, word2,
+							bigramPrecedingWord, bigramWord1, bigramWord2,
+							wordBefore);
+				}
+			}
 			fout.write(id[0] + " " + word + "\n");
 			
 			input = fin.readLine();
@@ -189,28 +258,35 @@ public class sctest {
 		
 		fin.close();
 		fout.close();
+		System.out.print(numSurrounding1);
 	  }
+
+	private static String extractUsingBigram(String word1, String word2,
+			List<String> bigramPrecedingWord, List<Integer> bigramWord1,
+			List<Integer> bigramWord2, String wordBefore) {
+		int indexOfPreceding;
+		if(bigramPrecedingWord.contains(wordBefore) == true){
+			indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
+			if(bigramWord1.get(indexOfPreceding) > 
+			bigramWord2.get(indexOfPreceding)){
+				return word1;
+			} else {
+				return word2;
+			}
+		} else {
+			return "";
+		}
+	}
 
 	private static String getCorrectWord(String word1, String word2,
 			List<String> prevWords, List<String> nextWords,
-			List<String> correctWord, List<String> bigramPrecedingWord,
-			List<Integer> bigramWord1, List<Integer> bigramWord2,
-			String wordBefore, String wordAfter) throws IOException {
+			List<String> correctWord, String wordBefore, String wordAfter) 
+					throws IOException {
 		
 		int indexOfPreceding = searchWord(prevWords, nextWords, 
 				wordBefore, wordAfter);
 		if(indexOfPreceding == -1) {
-			if(bigramPrecedingWord.contains(wordBefore) == true){
-				indexOfPreceding = bigramPrecedingWord.indexOf(wordBefore);
-				if(bigramWord1.get(indexOfPreceding) > 
-				bigramWord2.get(indexOfPreceding)){
-					return word1;
-				} else {
-					return word2;
-				}
-			} else {
-				return "";
-			}
+			return "";			
 		} else {
 			return(correctWord.get(indexOfPreceding));
 		}

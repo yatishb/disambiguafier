@@ -14,6 +14,8 @@ public class sctrain {
 	public static final CharSequence PUNCTUATION_COMMA = ",";
 	public static final CharSequence PUNCTUATION_APOS = "\'";
 	public static final CharSequence PUNCTUATION_DQUOTES = "\"";
+	public static final CharSequence PUNCTUATION_COLON = ":";
+	public static final CharSequence PUNCTUATION_SEMICOLON = ";";
 	
 	
 	public static int searchWord(String[] words, String check) {
@@ -49,7 +51,9 @@ public class sctrain {
 			if(words[i].contains(PUNCTUATION_APOS) || 
 					words[i].contains(PUNCTUATION_COMMA) ||
 					words[i].contains(PUNCTUATION_STOP) ||
-					words[i].contains(PUNCTUATION_DQUOTES)) {
+					words[i].contains(PUNCTUATION_DQUOTES) ||
+					words[i].contains(PUNCTUATION_COLON) ||
+					words[i].contains(PUNCTUATION_SEMICOLON)) {
 				int j=i;
 				for(j=i; j<limit-1; j++) {
 					words[j] = words[j+1]; 
@@ -97,7 +101,6 @@ public class sctrain {
 		String trainingFile = args[2], statsOutputFile = args[3];
 		int countWord1 = 0, countWord2 = 0;
 		
-		//List<surroundingWords> featureList = new ArrayList<surroundingWords>();
 		List<String> prevWords = new ArrayList<String>();
 		List<String> nextWords = new ArrayList<String>();
 		List<Integer> count1 = new ArrayList<Integer>();
@@ -106,6 +109,10 @@ public class sctrain {
 		//read Stop word file and update stop word list
 		List<String> stopWords = new ArrayList<String>();
 		readStopWrds(stopWords);
+		
+		List<String> surroundingWord = new ArrayList<String>();
+		List<Integer> surroundingCount1 = new ArrayList<Integer>();
+		List<Integer> surroundingCount2 = new ArrayList<Integer>();
 		
 		File fileValidation = new File(trainingFile);
 		if(!fileValidation.exists()) {
@@ -120,7 +127,6 @@ public class sctrain {
 			String wordBefore = "", wordAfter = "";
 			
 			removePunctuation(wordsInArray);
-			removeStopWords(stopWords, wordsInArray);
 			
 			int index = searchWord(wordsInArray, ">>");
 			if(index-2 >= 0) {
@@ -137,20 +143,33 @@ public class sctrain {
 					count1.add(1);
 					count2.add(0);
 					countWord1++;
+					removeStopWords(stopWords, wordsInArray);
+					extractSurroundingWords(surroundingWord, surroundingCount1,
+							surroundingCount2, wordsInArray,1);
 				} else {
 					count1.add(0);
 					count2.add(1);
 					countWord2++;
+					removeStopWords(stopWords, wordsInArray);
+					extractSurroundingWords(surroundingWord, surroundingCount1,
+							surroundingCount2, wordsInArray,2);
 				}
 			} else {
 				if(wordsInArray[index].equalsIgnoreCase(word1)) {
 					count1.set(indexIfExists, count1.get(indexIfExists)+1);
 					countWord1++;
+					removeStopWords(stopWords, wordsInArray);
+					extractSurroundingWords(surroundingWord, surroundingCount1,
+							surroundingCount2, wordsInArray,1);
 				} else {
 					count2.set(indexIfExists, count2.get(indexIfExists)+1);
 					countWord2++;
+					removeStopWords(stopWords, wordsInArray);
+					extractSurroundingWords(surroundingWord, surroundingCount1,
+							surroundingCount2, wordsInArray,2);
 				}
 			}
+			
 			
 			input = fin.readLine();
 		}
@@ -162,12 +181,68 @@ public class sctrain {
 		fout.write(toPrint);
 		toPrint = word2+" "+countWord2+"\n";
 		fout.write(toPrint);
+		fout.write(prevWords.size()+"\n");
 		for(; i<prevWords.size(); i++) {
 			toPrint = prevWords.get(i)+" "+nextWords.get(i);
 			toPrint += " "+word1+" "+count1.get(i)+" "+word2+" "+count2.get(i)+"\n";
 			
 			fout.write(toPrint);
 		}
+		fout.write(surroundingWord.size()+"\n");
+		for(i= INITIALIZEZERO; i<surroundingWord.size(); i++) {
+			toPrint = surroundingWord.get(i)+" "+word1+" "+surroundingCount1.get(i);
+			toPrint += " "+word2+" "+surroundingCount2.get(i)+"\n";
+			
+			fout.write(toPrint);
+		}
 		fout.close();
 	  }
+
+	private static void extractSurroundingWords(List<String> surroundingWord,
+			List<Integer> surroundingCount1, List<Integer> surroundingCount2,
+			String[] wordsInArray, int num) {
+		int newIndex = searchWord(wordsInArray, ">>")-2;//should give me the word before w
+		int i=0;
+		while(newIndex-i>=0) {
+			int exists = surroundingWord.indexOf(wordsInArray[newIndex-i].toLowerCase());
+			if(exists == -1) {
+				surroundingWord.add(wordsInArray[newIndex-i].toLowerCase());
+				if(num == 1){
+					surroundingCount1.add(2);
+					surroundingCount2.add(1);
+				} else {
+					surroundingCount1.add(1);
+					surroundingCount2.add(2);
+				}
+			} else {
+				if(num == 1) {
+					surroundingCount1.set(exists, surroundingCount1.get(exists)+1);
+				} else {
+					surroundingCount2.set(exists, surroundingCount2.get(exists)+1);
+				}
+			}
+			i++;
+		}
+		newIndex = searchWord(wordsInArray, ">>")+2;//should give me the word before w
+		while(newIndex<wordsInArray.length) {
+			int exists = surroundingWord.indexOf(wordsInArray[newIndex].toLowerCase());
+			if(exists == -1) {
+				surroundingWord.add(wordsInArray[newIndex].toLowerCase());
+				if(num == 1){
+					surroundingCount1.add(2);
+					surroundingCount2.add(1);
+				} else {
+					surroundingCount1.add(1);
+					surroundingCount2.add(2);
+				}
+			} else {
+				if(num == 1) {
+					surroundingCount1.set(exists, surroundingCount1.get(exists)+1);
+				} else {
+					surroundingCount2.set(exists, surroundingCount2.get(exists)+1);
+				}
+			}
+			newIndex++;
+		}
+	}
 }

@@ -116,11 +116,12 @@ public class sctest {
 				return word2;
 			}
 		} else {
-			int num = (int) (Math.random()*2);
+			/*int num = (int) (Math.random()*2);
 			if(num == 0)
 				return word1;
 			else
-				return word2;
+				return word2;*/
+			return "";
 		}
 	}
 
